@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+        <script>
+            Array.prototype[Symbol.for("shuffle")] = function() {
+                const a = this.slice();
+                let m = a.length;
+                while (m) {
+                    const i = Math.floor(Math.random() * m--);
+                    const t = a[m];
+                    a[m] = a[i];
+                    a[i] = t;
+                }
+                return a;
+            }
+        </script>
+        <script src="data.js"></script>
+        <script src="state.js"></script>
+        <script src="MinoView.js"></script>
+        <script src="view.js"></script>
+        <script>
+            function draw() {
+                state.next();
+                const mino = state.fallingMino;
+                view.clear();
+                for (let [x, y] of Mino.cell[mino.type][mino.facing]) {
+                    view.drawCell(Mino.color[mino.type], mino.center.x + x, mino.center.y + y);
+                }
+                for (let i = 1; i <= 10; ++i) {
+                    for (let j = 1; j <= 20; ++j) {
+                        if (state.matrix[i][j] != undefined) view.drawCell(state.matrix[i][j], i, j);
+                    }
+                }
+                if (!state.gameOver) window.requestAnimationFrame(draw);
+            }
+
+            window.onload = () => {
+                state.init();
+                const viewpanel = view.create();
+                state.onholdChangeListener = type => {
+                    view.holdView.drawMino(type);
+                };
+                state.onqueueChangeListener = queue => {
+                    for (const i in view.nextView) {
+                        view.nextView[i].drawMino(queue[i]);
+                    }
+                };
+                document.body.appendChild(viewpanel);
+                window.requestAnimationFrame(draw);
+                window.addEventListener('keydown', e => {
+                    switch (e.code) {
+                        case 'ArrowDown':
+                            state.key.softDrop = true;
+                            break;
+                        case 'Space':
+                            state.key.hardDrop = true;
+                            break;
+                        case 'ArrowLeft':
+                            state.key.move = -1;
+                            state.autoRepeat = false;
+                            break;
+                        case 'ArrowRight':
+                            state.key.move = 1;
+                            state.autoRepeat = false;
+                            break;
+                        case 'KeyZ':
+                            state.key.rotate = 'left';
+                            break;
+                        case 'KeyX':
+                        case 'ArrowUp':
+                            state.key.rotate = 'right';
+                            break;
+                        case 'ShiftLeft':
+                        case 'KeyC':
+                            state.key.hold = true;
+                            break;
+                    }
+                });
+                window.addEventListener('keyup', e => {
+                    switch (e.code) {
+                        case 'ArrowDown':
+                            state.key.softDrop = false;
+                            break;
+                        case 'ArrowLeft':
+                            if (state.key.move = -1) {
+                                state.key.move = false;
+                                state.autoRepeat = false;
+                            }
+                            break;
+                        case 'ArrowRight':
+                            if (state.key.move = 1) {
+                                state.key.move = false;
+                                state.autoRepeat = false;
+                            }
+                            break;
+                    }
+                });
+            };
+        </script>
+    <style>
+        .app {
+            display: flex;
+            justify-content: center;
+        }
+        .nextview {
+            display: flex;
+            flex-direction: column;
+        }
+        .nextview canvas, .holdview canvas {
+            margin: 5px 0px;
+        }
+        .matrixview {
+            width: 300px;
+            height: 600px;
+            margin: 0px 10px;
+        }
+        .matrixview canvas {
+            position: absolute;
+        }
+    </style>
+    </head>
+    <body>
+    </body>
+</html>
